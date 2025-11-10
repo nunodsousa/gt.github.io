@@ -5,13 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Nuno · Analytics Playground</title>
 
-  <!-- PyScript (Python in the browser) -->
-  <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
-  <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
-  <py-config>
-    packages = ["numpy", "matplotlib"]
-  </py-config>
-
   <!-- Plotly: explicit v2.x -->
   <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 
@@ -65,8 +58,15 @@
     .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
     .plot{min-height:420px; border-radius:14px; background:var(--card); border:1px solid rgba(148,163,184,.12); padding:8px}
 
-    .tab{display:none}
-    .tab.active{display:block}
+    /* Mandelbrot */
+    .mandel-wrap{display:flex; flex-direction:column; gap:10px}
+    .mandel-controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .mandel-controls label{font-size:12px; color:var(--muted)}
+    .mandel-controls input{background:rgba(2,8,23,.4); color:var(--text); border:1px solid rgba(148,163,184,.25); border-radius:10px; padding:6px 8px; width:110px}
+    .mandel-controls button{background:linear-gradient(180deg, rgba(34,211,238,.28), rgba(34,211,238,.12));
+      border:1px solid rgba(34,211,238,.45); color:var(--text); font-weight:700; padding:8px 12px; border-radius:12px; cursor:pointer;}
+    canvas{width:100%; height:420px; border-radius:14px; background:var(--card); border:1px solid rgba(148,163,184,.12)}
+    .tab{display:block} /* single tab now */
 
     @media (max-width: 1040px){ .grid{grid-template-columns:1fr} .sidebar{display:none} .content{padding:18px} }
   </style>
@@ -83,12 +83,12 @@
       </svg>
       <h1>Analytics Playground</h1>
     </div>
-    <p class="subtle">Interactive demos: PyScript & Plotly</p>
+    <p class="subtle">Interactive demos: Plotly & Mandelbrot</p>
 
     <div class="side-group">
       <div class="side-title">Sections</div>
-      <a href="#" class="side-link" onclick="openTab('js')">JavaScript Demos <span class="pill">2D + 3D</span></a>
-      <a href="#" class="side-link" onclick="openTab('py')">Python Demos <span class="pill">Matplotlib</span></a>
+      <a href="#" class="side-link" onclick="scrollToId('js-plots')">JavaScript Plots <span class="pill">2D + 3D</span></a>
+      <a href="#" class="side-link" onclick="scrollToId('mandelbrot')">Mandelbrot <span class="pill">GPU-free</span></a>
     </div>
   </aside>
 
@@ -99,19 +99,18 @@
         <div style="display:flex;align-items:center;gap:10px">
           <span style="font-weight:800;letter-spacing:.12em;color:#9bdff3">NUNO • DEMOS</span>
         </div>
-        <nav class="menu" role="tablist" aria-label="Subpages">
-          <button id="btn-js" class="active" onclick="openTab('js')" aria-controls="tab-js" aria-selected="true">JavaScript</button>
-          <button id="btn-py" onclick="openTab('py')" aria-controls="tab-py" aria-selected="false">Python</button>
+        <nav class="menu" aria-label="Subpages">
+          <button class="active" disabled>JavaScript</button>
         </nav>
       </div>
     </header>
 
     <main class="content">
-      <!-- JS TAB -->
-      <section id="tab-js" class="tab active" role="tabpanel" aria-labelledby="btn-js">
+      <!-- JS Plots -->
+      <section id="js-plots" class="tab" role="tabpanel">
         <div class="card">
           <h2>JavaScript Examples (Plotly)</h2>
-          <p class="lead">Interactive 2D and 3D plots rendered entirely in the browser.</p>
+          <p class="lead">Interactive 2D and 3D plots rendered in the browser.</p>
         </div>
 
         <div class="grid">
@@ -127,78 +126,33 @@
         </div>
       </section>
 
-      <!-- PY TAB -->
-      <section id="tab-py" class="tab" role="tabpanel" aria-labelledby="btn-py">
+      <!-- Mandelbrot -->
+      <section id="mandelbrot" class="tab" role="tabpanel" style="margin-top:18px">
         <div class="card">
-          <h2>Python Example (PyScript)</h2>
-          <p class="lead">Matplotlib chart rendered by Python running in the browser.</p>
-        </div>
-
-        <div class="grid">
-          <div class="card">
-            <h3 style="margin:0 0 10px">Matplotlib Plot (Python)</h3>
-            <div id="py-plot-out" class="plot"></div>
-            <div id="py-meta" class="subtle" style="margin-top:10px"></div>
+          <h2>Mandelbrot Set (JavaScript)</h2>
+          <p class="lead">Scroll to zoom, drag to pan. Adjust iterations for detail vs speed.</p>
+          <div class="mandel-wrap">
+            <div class="mandel-controls">
+              <label>Center X <input id="cx" type="number" step="0.001" value="-0.5" /></label>
+              <label>Center Y <input id="cy" type="number" step="0.001" value="0.0" /></label>
+              <label>Scale <input id="scale" type="number" step="0.0001" value="0.004" /></label>
+              <label>Iterations <input id="iter" type="number" min="10" max="3000" value="500" /></label>
+              <button onclick="resetMandel()">Reset</button>
+              <button onclick="renderMandel()">Render</button>
+            </div>
+            <canvas id="mandel"></canvas>
+            <div class="subtle">Tip: Use your mouse wheel to zoom at the cursor. Drag to pan.</div>
           </div>
         </div>
-
-        <!-- PyScript: image-encode the figure, no pyscript.display -->
-        <py-script>
-import datetime, io, base64
-import numpy as np, matplotlib.pyplot as plt
-from js import document  # DOM access
-
-def _q(id_):
-    el = document.getElementById(id_)
-    if el is None:
-        raise RuntimeError(f"Missing element: #{id_}")
-    return el
-
-def render_matplotlib_plot():
-    x = np.linspace(0, 2*np.pi, 400)
-    y = np.sin(x) * np.exp(-0.15*x)
-    fig, ax = plt.subplots()
-    ax.plot(x, y, linewidth=2)
-    ax.set_title("Damped Sine (Matplotlib)")
-    ax.set_xlabel("x"); ax.set_ylabel("sin(x)·e^{-0.15x}")
-    ax.grid(True, alpha=.35)
-
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight", dpi=144)
-    plt.close(fig)
-    buf.seek(0)
-    b64 = base64.b64encode(buf.read()).decode("ascii")
-    _q("py-plot-out").innerHTML = (
-        f"<img alt='Matplotlib plot' style='width:100%;height:100%;object-fit:contain;border-radius:10px'"
-        f" src='data:image/png;base64,{b64}'/>"
-    )
-
-def init_page():
-    _q("py-meta").innerHTML = f"Python initialized at: <code>{datetime.datetime.now():%Y-%m-%d %H:%M:%S}</code>"
-    render_matplotlib_plot()
-
-# Run once elements exist (this block is after them in HTML)
-init_page()
-        </py-script>
       </section>
     </main>
   </div>
 
   <!-- JavaScript logic -->
   <script>
-    // Tabs
-    function openTab(which){
-      const js = document.getElementById('tab-js');
-      const py = document.getElementById('tab-py');
-      const bjs = document.getElementById('btn-js');
-      const bpy = document.getElementById('btn-py');
-      if(which === 'js'){
-        js.classList.add('active'); py.classList.remove('active');
-        bjs.classList.add('active'); bpy.classList.remove('active');
-      }else{
-        py.classList.add('active'); js.classList.remove('active');
-        bpy.classList.add('active'); bjs.classList.remove('active');
-      }
+    function scrollToId(id){
+      const el = document.getElementById(id);
+      if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); }
     }
 
     // Plotly 2D: sin & cos
@@ -234,9 +188,168 @@ init_page()
       Plotly.newPlot('js-plot-3d', data, layout, {responsive:true});
     }
 
-    // Initialize plots
+    // -------- Mandelbrot (Canvas) --------
+    const mandelCanvas = document.getElementById('mandel');
+    const ctx = mandelCanvas.getContext('2d', { willReadFrequently: true });
+
+    // Resize canvas to container CSS size
+    function fitCanvas() {
+      const rect = mandelCanvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      mandelCanvas.width  = Math.max(1, Math.floor(rect.width * dpr));
+      mandelCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // align drawing with CSS pixels
+    }
+
+    // State
+    let state = {
+      cx: -0.5,
+      cy:  0.0,
+      scale: 0.004,   // complex units per CSS pixel
+      maxIter: 500,
+      isPanning: false,
+      panStart: {x:0,y:0},
+      centerStart: {cx: -0.5, cy: 0.0}
+    };
+
+    function uiToState(){
+      state.cx = parseFloat(document.getElementById('cx').value);
+      state.cy = parseFloat(document.getElementById('cy').value);
+      state.scale = parseFloat(document.getElementById('scale').value);
+      state.maxIter = parseInt(document.getElementById('iter').value, 10);
+    }
+    function stateToUi(){
+      document.getElementById('cx').value = state.cx.toFixed(6);
+      document.getElementById('cy').value = state.cy.toFixed(6);
+      document.getElementById('scale').value = state.scale.toFixed(6);
+      document.getElementById('iter').value = state.maxIter;
+    }
+
+    function resetMandel(){
+      state = { cx:-0.5, cy:0.0, scale:0.004, maxIter:500, isPanning:false, panStart:{x:0,y:0}, centerStart:{cx:-0.5, cy:0.0} };
+      stateToUi();
+      renderMandel();
+    }
+
+    function colorMap(t){
+      // t in [0,1] (smooth iteration ratio). Convert HSV->RGB quickly.
+      const h = 360 * t, s = 1, v = t < 1 ? 1 : 0; // black for interior
+      const c = v * s;
+      const x = c * (1 - Math.abs((h/60)%2 - 1));
+      const m = v - c;
+      let r=0,g=0,b=0;
+      if(h < 60)       { r=c; g=x; b=0; }
+      else if(h <120 ) { r=x; g=c; b=0; }
+      else if(h <180 ) { r=0; g=c; b=x; }
+      else if(h <240 ) { r=0; g=x; b=c; }
+      else if(h <300 ) { r=x; g=0; b=c; }
+      else             { r=c; g=0; b=x; }
+      return [Math.round((r+m)*255), Math.round((g+m)*255), Math.round((b+m)*255)];
+    }
+
+    function renderMandel(){
+      uiToState();
+      fitCanvas();
+      const w = mandelCanvas.width;
+      const h = mandelCanvas.height;
+      const img = ctx.createImageData(w, h);
+
+      // scale is per CSS pixel; convert to device pixel (since width/height are device px)
+      const dpr = window.devicePixelRatio || 1;
+      const scalePerDevPx = state.scale / dpr;
+
+      const cx = state.cx, cy = state.cy;
+      const maxIter = state.maxIter;
+      const escape2 = 4;
+
+      let ptr = 0;
+      for(let py=0; py<h; py++){
+        const y0 = cy + (py - h/2) * scalePerDevPx;
+        for(let px=0; px<w; px++){
+          const x0 = cx + (px - w/2) * scalePerDevPx;
+          let x = 0, y = 0, iter = 0;
+          let x2 = 0, y2 = 0;
+          while (x2 + y2 <= escape2 && iter < maxIter){
+            y = 2*x*y + y0;
+            x = x2 - y2 + x0;
+            x2 = x*x; y2 = y*y;
+            iter++;
+          }
+          let r,g,b;
+          if (iter >= maxIter){
+            r=g=b=0; // interior black
+          } else {
+            // Smooth iteration count
+            const zn = Math.sqrt(x2 + y2);
+            const nu = Math.log(Math.log(zn)/Math.log(2)) / Math.log(2);
+            const smooth = (iter + 1 - nu) / maxIter;
+            [r,g,b] = colorMap(Math.max(0, Math.min(1, smooth)));
+          }
+          img.data[ptr++] = r;
+          img.data[ptr++] = g;
+          img.data[ptr++] = b;
+          img.data[ptr++] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+
+    // Zoom with wheel (zoom at cursor)
+    mandelCanvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = mandelCanvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const mx = (e.clientX - rect.left) * dpr;
+      const my = (e.clientY - rect.top) * dpr;
+
+      // Convert to complex coords before zoom
+      const scalePerDevPx = state.scale / dpr;
+      const x0 = state.cx + (mx - mandelCanvas.width/2) * scalePerDevPx;
+      const y0 = state.cy + (my - mandelCanvas.height/2) * scalePerDevPx;
+
+      const zoom = e.deltaY < 0 ? 0.8 : 1.25; // in/out
+      state.scale *= zoom;
+
+      // Keep cursor fixed by recentering
+      const scalePerDevPxNew = state.scale / dpr;
+      state.cx = x0 - (mx - mandelCanvas.width/2) * scalePerDevPxNew;
+      state.cy = y0 - (my - mandelCanvas.height/2) * scalePerDevPxNew;
+
+      stateToUi();
+      renderMandel();
+    }, { passive:false });
+
+    // Pan with drag
+    mandelCanvas.addEventListener('mousedown', (e) => {
+      state.isPanning = true;
+      state.panStart = { x: e.clientX, y: e.clientY };
+      state.centerStart = { cx: state.cx, cy: state.cy };
+    });
+    window.addEventListener('mouseup', () => { state.isPanning = false; });
+    window.addEventListener('mousemove', (e) => {
+      if(!state.isPanning) return;
+      const dx = e.clientX - state.panStart.x;
+      const dy = e.clientY - state.panStart.y;
+      const dpr = window.devicePixelRatio || 1;
+      state.cx = state.centerStart.cx - dx * (state.scale / dpr);
+      state.cy = state.centerStart.cy - dy * (state.scale / dpr);
+      stateToUi();
+      renderMandel();
+    });
+
+    // Resize handling
+    window.addEventListener('resize', () => renderMandel());
+
+    // Initialize plots + Mandelbrot
     draw2D();
     draw3D();
+    stateToUi();
+    renderMandel();
+    // Re-render Mandelbrot when inputs change
+    ['cx','cy','scale','iter'].forEach(id => {
+      document.getElementById(id).addEventListener('change', renderMandel);
+      document.getElementById(id).addEventListener('input', (e)=>{ if(e.target.id==='iter') renderMandel(); });
+    });
   </script>
 </body>
 </html>
