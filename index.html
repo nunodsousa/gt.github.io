@@ -13,16 +13,16 @@
   
   <div id="python-output"></div>
 
-  <py-script>
+  <py-script output="python-output">
     import datetime
     
     # Get the current time
     now = datetime.datetime.now()
     pretty_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
-    # Use display() to send output to the HTML element
-    # specified by the 'target' attribute.
-    display(f"This line was written by Python at: {pretty_time}", target="python-output")
+    # The standard Python print() function will be
+    # automatically routed to the "python-output" div.
+    print(f"This line was written by Python at: {pretty_time}")
   </py-script>
 </body>
 </html>
