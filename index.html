@@ -174,15 +174,24 @@
         </div>
 
         <!-- PyScript code -->
-        <py-script>
+<py-script>
 import datetime, numpy as np, matplotlib.pyplot as plt
-from pyscript import display, Element
+from pyscript import display
+from js import document  # use DOM directly
+
+IDS = ["a11","a12","a13","a21","a22","a23","a31","a32","a33"]
+DEFAULTS = [1,2,3,0,1,4,5,6,0]
 
 def _read_matrix():
-    ids = ["a11","a12","a13","a21","a22","a23","a31","a32","a33"]
-    vals = [float(Element(i).value) for i in ids]
-    A = np.array(vals, dtype=float).reshape((3,3))
-    return A
+    vals = []
+    for i in IDS:
+        v = document.getElementById(i).value
+        vals.append(float(v))
+    return np.array(vals, dtype=float).reshape((3,3))
+
+def _set_defaults():
+    for val, i in zip(DEFAULTS, IDS):
+        document.getElementById(i).value = val
 
 def _fmt(M, name):
     with np.printoptions(precision=4, suppress=True):
@@ -193,7 +202,8 @@ def invert_matrix():
         A = _read_matrix()
         det = float(np.linalg.det(A))
         if abs(det) < 1e-12:
-            display("<pre>Matrix is singular (det≈0), cannot invert.</pre>", target="py-matrix-output", append=False)
+            display("<pre>Matrix is singular (det≈0), cannot invert.</pre>",
+                    target="py-matrix-output", append=False)
             return
         Ainv = np.linalg.inv(A)
         I = A @ Ainv
@@ -208,12 +218,10 @@ def invert_matrix():
         display(f"<pre>Error: {e}</pre>", target="py-matrix-output", append=False)
 
 def reset_matrix():
-    defaults = [1,2,3,0,1,4,5,6,0]
-    for i, id_ in enumerate(["a11","a12","a13","a21","a22","a23","a31","a32","a33"]):
-        Element(id_).element.value = defaults[i]
+    _set_defaults()
     invert_matrix()
 
-# Matplotlib plot
+# ----- Matplotlib plot -----
 x = np.linspace(0, 2*np.pi, 400)
 y = np.sin(x) * np.exp(-0.15*x)
 fig, ax = plt.subplots()
@@ -223,11 +231,13 @@ ax.set_xlabel("x"); ax.set_ylabel("sin(x)·e^{-0.15x}")
 ax.grid(True, alpha=.35)
 display(fig, target="py-plot-out")
 
-# Meta + initial inversion so output is visible immediately
-now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-display(f"Python initialized at: <code>{now}</code>", target="py-meta")
+# Info + initial state
+display(f"Python initialized at: <code>{datetime.datetime.now():%Y-%m-%d %H:%M:%S}</code>",
+        target="py-meta")
+_set_defaults()
 invert_matrix()
-        </py-script>
+</py-script>
+
       </section>
     </main>
   </div>
