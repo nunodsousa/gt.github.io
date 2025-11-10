@@ -12,149 +12,81 @@
     packages = ["numpy", "matplotlib"]
   </py-config>
 
-  <!-- Plotly (2D + 3D) -->
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <!-- Plotly: use an explicit v2.x version (update as desired) -->
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 
-  <!-- Base styling -->
   <style>
     :root{
-      --bg:#0f172a;          /* slate-900 */
-      --panel:#0b1226;       /* deep panel */
-      --muted:#94a3b8;       /* slate-400 */
-      --text:#e5e7eb;        /* zinc-200 */
-      --brand:#06b6d4;       /* cyan-500 */
-      --brand-2:#22d3ee;     /* cyan-400 */
-      --accent:#38bdf8;      /* sky-400 */
-      --card:#0b1226;
-      --ring: rgba(56,189,248,.35);
-      --shadow: 0 10px 30px rgba(2,8,23,.28);
+      --bg:#0f172a; --panel:#0b1226; --muted:#94a3b8; --text:#e5e7eb;
+      --brand:#06b6d4; --accent:#38bdf8; --card:#0b1226; --shadow: 0 10px 30px rgba(2,8,23,.28);
       --radius: 18px;
     }
-
-    *{box-sizing:border-box}
-    html,body{height:100%}
+    *{box-sizing:border-box} html,body{height:100%}
     body{
-      margin:0;
-      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      margin:0; font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial;
       background: radial-gradient(1200px 600px at 10% -10%, rgba(56,189,248,.10), transparent 50%),
                   radial-gradient(1200px 600px at 110% 20%, rgba(34,211,238,.10), transparent 50%),
                   var(--bg);
-      color:var(--text);
-      display:flex;
-      min-height:100vh;
+      color:var(--text); display:flex; min-height:100vh;
     }
 
     /* Sidebar */
-    .sidebar{
-      width:260px;
-      background: linear-gradient(180deg, rgba(2,8,23,.7), rgba(2,8,23,.25)), var(--panel);
-      border-right:1px solid rgba(148,163,184,.12);
-      padding:20px 18px;
-      position:sticky;
-      top:0;
-      height:100vh;
-    }
-    .logo{
-      display:flex; align-items:center; gap:12px; margin-bottom:14px;
-    }
+    .sidebar{width:260px; background: linear-gradient(180deg, rgba(2,8,23,.7), rgba(2,8,23,.25)), var(--panel);
+      border-right:1px solid rgba(148,163,184,.12); padding:20px 18px; position:sticky; top:0; height:100vh;}
+    .logo{display:flex; align-items:center; gap:12px; margin-bottom:14px;}
     .logo svg{width:34px;height:34px; filter:drop-shadow(0 4px 10px rgba(34,211,238,.35))}
     .logo h1{font-size:18px; margin:0; letter-spacing:.3px}
     .subtle{color:var(--muted); font-size:13px; margin:0 0 22px}
-
     .side-group{margin-top:18px}
     .side-title{font-size:12px; text-transform:uppercase; letter-spacing:.16em; color:#86a2c2; margin:10px 10px}
-    .side-link{
-      display:flex; align-items:center; gap:10px;
-      padding:10px 12px; margin:6px 6px; border-radius:12px;
-      color:var(--text); text-decoration:none;
-      border:1px solid rgba(148,163,184,.10);
+    .side-link{display:flex; align-items:center; gap:10px; padding:10px 12px; margin:6px 6px; border-radius:12px;
+      color:var(--text); text-decoration:none; border:1px solid rgba(148,163,184,.10);
       background:linear-gradient(180deg, rgba(148,163,184,.06), rgba(148,163,184,.02));
-      transition:transform .08s ease, border-color .2s ease, background .2s ease;
-    }
+      transition:transform .08s ease, border-color .2s ease, background .2s ease;}
     .side-link:hover{transform:translateY(-1px); border-color:rgba(34,211,238,.35)}
     .pill{margin-left:auto; font-size:11px; color:#9bdff3; background:rgba(34,211,238,.15); padding:2px 8px; border-radius:999px; border:1px solid rgba(34,211,238,.25)}
 
-    /* Main area */
+    /* Main */
     .container{flex:1; display:flex; flex-direction:column}
-    .topbar{
-      position:sticky; top:0; z-index:10;
-      backdrop-filter: blur(10px);
+    .topbar{position:sticky; top:0; z-index:10; backdrop-filter: blur(10px);
       background: linear-gradient(180deg, rgba(2,8,23,.65), rgba(2,8,23,.35));
-      border-bottom:1px solid rgba(148,163,184,.12);
-    }
+      border-bottom:1px solid rgba(148,163,184,.12);}
     .top-wrap{display:flex; align-items:center; justify-content:space-between; padding:12px 20px}
-    .menu{
-      display:flex; gap:10px; padding:8px; border-radius:999px; background:rgba(148,163,184,.10); border:1px solid rgba(148,163,184,.16)
-    }
-    .menu button{
-      background:transparent; border:0; color:var(--text); padding:10px 14px; border-radius:999px; font-weight:600; cursor:pointer; font-size:14px;
-    }
+    .menu{display:flex; gap:10px; padding:8px; border-radius:999px; background:rgba(148,163,184,.10); border:1px solid rgba(148,163,184,.16)}
+    .menu button{background:transparent; border:0; color:var(--text); padding:10px 14px; border-radius:999px; font-weight:600; cursor:pointer; font-size:14px;}
     .menu button.active{background:linear-gradient(180deg, rgba(34,211,238,.22), rgba(34,211,238,.1)); box-shadow: inset 0 0 0 1px rgba(34,211,238,.35)}
 
     .content{padding:22px; max-width:1200px; margin:0 auto; width:100%}
-    .card{
-      background: linear-gradient(180deg, rgba(148,163,184,.07), rgba(148,163,184,.03));
-      border:1px solid rgba(148,163,184,.12);
-      box-shadow: var(--shadow);
-      border-radius: var(--radius);
-      padding:20px;
-      margin-bottom:20px;
-    }
+    .card{background: linear-gradient(180deg, rgba(148,163,184,.07), rgba(148,163,184,.03));
+      border:1px solid rgba(148,163,184,.12); box-shadow: var(--shadow); border-radius: var(--radius); padding:20px; margin-bottom:20px;}
     h2{margin:0 0 8px; font-size:20px}
     p.lead{margin:0 0 12px; color:#c7d2fe}
 
-    /* Plots */
     .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
     .plot{min-height:420px; border-radius:14px; background:var(--card); border:1px solid rgba(148,163,184,.12); padding:8px}
 
-    /* Matrix UI */
-    .matrix{
-      display:grid; grid-template-columns:repeat(3, 90px); gap:8px; margin:10px 0 6px;
-    }
-    .matrix input{
-      width:100%; padding:10px 8px; border-radius:10px;
-      border:1px solid rgba(148,163,184,.25);
-      background:rgba(2,8,23,.4); color:var(--text);
-      outline:none;
-    }
+    .matrix{display:grid; grid-template-columns:repeat(3, 90px); gap:8px; margin:10px 0 6px;}
+    .matrix input{width:100%; padding:10px 8px; border-radius:10px; border:1px solid rgba(148,163,184,.25);
+      background:rgba(2,8,23,.4); color:var(--text); outline:none;}
     .actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-    .btn{
-      background:linear-gradient(180deg, rgba(34,211,238,.28), rgba(34,211,238,.12));
-      border:1px solid rgba(34,211,238,.45);
-      color:var(--text); font-weight:700; padding:10px 14px; border-radius:12px; cursor:pointer;
-    }
-    .btn.secondary{
-      background:transparent; border:1px solid rgba(148,163,184,.3);
-    }
-    pre, code{
-      background:rgba(2,8,23,.55);
-      border:1px solid rgba(148,163,184,.18);
-      border-radius:12px; padding:12px; overflow:auto; color:#d1fae5
-    }
+    .btn{background:linear-gradient(180deg, rgba(34,211,238,.28), rgba(34,211,238,.12));
+      border:1px solid rgba(34,211,238,.45); color:var(--text); font-weight:700; padding:10px 14px; border-radius:12px; cursor:pointer;}
+    .btn.secondary{background:transparent; border:1px solid rgba(148,163,184,.3)}
+    pre, code{background:rgba(2,8,23,.55); border:1px solid rgba(148,163,184,.18); border-radius:12px; padding:12px; overflow:auto; color:#d1fae5}
 
-    /* Tabs (subpages) */
     .tab{display:none}
     .tab.active{display:block}
 
-    /* Responsive */
-    @media (max-width: 1040px){
-      .grid{grid-template-columns:1fr}
-      .sidebar{display:none}
-      .content{padding:18px}
-    }
+    @media (max-width: 1040px){ .grid{grid-template-columns:1fr} .sidebar{display:none} .content{padding:18px} }
   </style>
 </head>
 <body>
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="logo">
-      <!-- Inline SVG logo -->
       <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <defs>
-          <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-            <stop stop-color="#22d3ee"/><stop offset="1" stop-color="#38bdf8"/>
-          </linearGradient>
-        </defs>
+        <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+          <stop stop-color="#22d3ee"/><stop offset="1" stop-color="#38bdf8"/></linearGradient></defs>
         <circle cx="32" cy="32" r="28" stroke="url(#g)" stroke-width="3"/>
         <path d="M18 36c10-2 18-10 28-8M20 44c8-4 16-4 24-2" stroke="url(#g)" stroke-width="3" stroke-linecap="round"/>
       </svg>
@@ -164,24 +96,13 @@
 
     <div class="side-group">
       <div class="side-title">Sections</div>
-      <a href="#" class="side-link" onclick="openTab('js')">
-        JavaScript Demos <span class="pill">2D + 3D</span>
-      </a>
-      <a href="#" class="side-link" onclick="openTab('py')">
-        Python Demos <span class="pill">Matrix + Plot</span>
-      </a>
-    </div>
-
-    <div class="side-group">
-      <div class="side-title">Resources</div>
-      <a class="side-link" href="https://plotly.com/javascript/" target="_blank" rel="noopener">Plotly.js Docs</a>
-      <a class="side-link" href="https://pyscript.net/" target="_blank" rel="noopener">PyScript Docs</a>
+      <a href="#" class="side-link" onclick="openTab('js')">JavaScript Demos <span class="pill">2D + 3D</span></a>
+      <a href="#" class="side-link" onclick="openTab('py')">Python Demos <span class="pill">Matrix + Plot</span></a>
     </div>
   </aside>
 
   <!-- Main -->
   <div class="container">
-    <!-- Top nav -->
     <header class="topbar">
       <div class="top-wrap">
         <div style="display:flex;align-items:center;gap:10px">
@@ -194,7 +115,6 @@
       </div>
     </header>
 
-    <!-- Content -->
     <main class="content">
       <!-- JS TAB -->
       <section id="tab-js" class="tab active" role="tabpanel" aria-labelledby="btn-js">
@@ -253,7 +173,7 @@
           </div>
         </div>
 
-        <!-- PyScript code block -->
+        <!-- PyScript code -->
         <py-script>
 import datetime, numpy as np, matplotlib.pyplot as plt
 from pyscript import display, Element
@@ -264,7 +184,7 @@ def _read_matrix():
     A = np.array(vals, dtype=float).reshape((3,3))
     return A
 
-def _format_matrix(M, name):
+def _fmt(M, name):
     with np.printoptions(precision=4, suppress=True):
         return f"{name} =\n{M}\n"
 
@@ -278,10 +198,10 @@ def invert_matrix():
         Ainv = np.linalg.inv(A)
         I = A @ Ainv
         txt  = "<pre>"
-        txt += _format_matrix(A, "A")
+        txt += _fmt(A, "A")
         txt += f"det(A) = {det:.6f}\n\n"
-        txt += _format_matrix(Ainv, "A⁻¹")
-        txt += _format_matrix(I, "A·A⁻¹")
+        txt += _fmt(Ainv, "A⁻¹")
+        txt += _fmt(I, "A·A⁻¹")
         txt += "</pre>"
         display(txt, target="py-matrix-output", append=False)
     except Exception as e:
@@ -293,7 +213,7 @@ def reset_matrix():
         Element(id_).element.value = defaults[i]
     invert_matrix()
 
-# Draw a Matplotlib plot
+# Matplotlib plot
 x = np.linspace(0, 2*np.pi, 400)
 y = np.sin(x) * np.exp(-0.15*x)
 fig, ax = plt.subplots()
@@ -303,9 +223,10 @@ ax.set_xlabel("x"); ax.set_ylabel("sin(x)·e^{-0.15x}")
 ax.grid(True, alpha=.35)
 display(fig, target="py-plot-out")
 
-# Meta info
+# Meta + initial inversion so output is visible immediately
 now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 display(f"Python initialized at: <code>{now}</code>", target="py-meta")
+invert_matrix()
         </py-script>
       </section>
     </main>
@@ -313,7 +234,7 @@ display(f"Python initialized at: <code>{now}</code>", target="py-meta")
 
   <!-- JavaScript logic -->
   <script>
-    // Tab handling
+    // Tabs
     function openTab(which){
       const js = document.getElementById('tab-js');
       const py = document.getElementById('tab-py');
@@ -339,10 +260,7 @@ display(f"Python initialized at: <code>{now}</code>", target="py-meta")
         {x:xs, y:ys, mode:'lines', name:'sin(x)'},
         {x:xs, y:yc, mode:'lines', name:'cos(x)'}
       ];
-      const layout = {
-        title:'Sine & Cosine (Plotly 2D)',
-        xaxis:{title:'x'}, yaxis:{title:'y'}, margin:{t:48, r:12, b:48, l:48}
-      };
+      const layout = { title:'Sine & Cosine (Plotly 2D)', xaxis:{title:'x'}, yaxis:{title:'y'}, margin:{t:48, r:12, b:48, l:48} };
       Plotly.newPlot('js-plot-2d', data, layout, {responsive:true});
     }
 
@@ -353,22 +271,18 @@ display(f"Python initialized at: <code>{now}</code>", target="py-meta")
       const z = [];
       for(let i=0;i<x.length;i++){
         const row = [];
-        for(let j=0;j*y.length;j++){
+        for(let j=0; j<y.length; j++){   // FIX: use j<y.length
           const xx = x[i], yy = y[j];
           row.push(Math.sin(xx) * Math.cos(yy));
         }
         z.push(row);
       }
       const data = [{ type:'surface', x:x, y:y, z:z, contours:{ z:{show:true, usecolormap:true, highlightcolor:'white', project:{z:true}}}}];
-      const layout = {
-        title:'Surface z = sin(x)·cos(y) (Plotly 3D)',
-        scene:{ xaxis:{title:'x'}, yaxis:{title:'y'}, zaxis:{title:'z'} },
-        margin:{l:0,r:0,b:0,t:48}
-      };
+      const layout = { title:'Surface z = sin(x)·cos(y) (Plotly 3D)', scene:{ xaxis:{title:'x'}, yaxis:{title:'y'}, zaxis:{title:'z'} }, margin:{l:0,r:0,b:0,t:48} };
       Plotly.newPlot('js-plot-3d', data, layout, {responsive:true});
     }
 
-    // Init
+    // Initialize plots
     draw2D();
     draw3D();
   </script>
