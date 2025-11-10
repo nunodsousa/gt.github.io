@@ -65,15 +65,6 @@
     .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
     .plot{min-height:420px; border-radius:14px; background:var(--card); border:1px solid rgba(148,163,184,.12); padding:8px}
 
-    .matrix{display:grid; grid-template-columns:repeat(3, 90px); gap:8px; margin:10px 0 6px;}
-    .matrix input{width:100%; padding:10px 8px; border-radius:10px; border:1px solid rgba(148,163,184,.25);
-      background:rgba(2,8,23,.4); color:var(--text); outline:none;}
-    .actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-    .btn{background:linear-gradient(180deg, rgba(34,211,238,.28), rgba(34,211,238,.12));
-      border:1px solid rgba(34,211,238,.45); color:var(--text); font-weight:700; padding:10px 14px; border-radius:12px; cursor:pointer;}
-    .btn.secondary{background:transparent; border:1px solid rgba(148,163,184,.3)}
-    pre, code{background:rgba(2,8,23,.55); border:1px solid rgba(148,163,184,.18); border-radius:12px; padding:12px; overflow:auto; color:#d1fae5}
-
     .tab{display:none}
     .tab.active{display:block}
 
@@ -97,7 +88,7 @@
     <div class="side-group">
       <div class="side-title">Sections</div>
       <a href="#" class="side-link" onclick="openTab('js')">JavaScript Demos <span class="pill">2D + 3D</span></a>
-      <a href="#" class="side-link" onclick="openTab('py')">Python Demos <span class="pill">Matrix + Plot</span></a>
+      <a href="#" class="side-link" onclick="openTab('py')">Python Demos <span class="pill">Matplotlib</span></a>
     </div>
   </aside>
 
@@ -139,34 +130,11 @@
       <!-- PY TAB -->
       <section id="tab-py" class="tab" role="tabpanel" aria-labelledby="btn-py">
         <div class="card">
-          <h2>Python Examples (PyScript)</h2>
-          <p class="lead">Run Python in-browser: invert a 3×3 matrix and draw a Matplotlib plot.</p>
+          <h2>Python Example (PyScript)</h2>
+          <p class="lead">Matplotlib chart rendered by Python running in the browser.</p>
         </div>
 
         <div class="grid">
-          <div class="card">
-            <h3 style="margin:0 0 10px">3×3 Matrix Inversion</h3>
-            <p class="subtle" style="margin:0 0 6px">Enter values and click <strong>Invert</strong>. Uses <code>numpy.linalg.inv</code>.</p>
-            <div class="matrix">
-              <input id="a11" type="number" value="1" step="any" />
-              <input id="a12" type="number" value="2" step="any" />
-              <input id="a13" type="number" value="3" step="any" />
-              <input id="a21" type="number" value="0" step="any" />
-              <input id="a22" type="number" value="1" step="any" />
-              <input id="a23" type="number" value="4" step="any" />
-              <input id="a31" type="number" value="5" step="any" />
-              <input id="a32" type="number" value="6" step="any" />
-              <input id="a33" type="number" value="0" step="any" />
-            </div>
-            <div class="actions">
-              <!-- call Python via PyScript runtime -->
-              <button class="btn" onclick="pyscript.runtime.globals.get('invert_matrix')()">Invert</button>
-              <button class="btn secondary" onclick="pyscript.runtime.globals.get('reset_matrix')()">Reset</button>
-            </div>
-            <div style="height:10px"></div>
-            <div id="py-matrix-output"></div>
-          </div>
-
           <div class="card">
             <h3 style="margin:0 0 10px">Matplotlib Plot (Python)</h3>
             <div id="py-plot-out" class="plot"></div>
@@ -174,53 +142,17 @@
           </div>
         </div>
 
-        <!-- PyScript: no pyscript.display usage -->
+        <!-- PyScript: image-encode the figure, no pyscript.display -->
         <py-script>
 import datetime, io, base64
 import numpy as np, matplotlib.pyplot as plt
 from js import document  # DOM access
-
-IDS = ["a11","a12","a13","a21","a22","a23","a31","a32","a33"]
-DEFAULTS = [1,2,3,0,1,4,5,6,0]
 
 def _q(id_):
     el = document.getElementById(id_)
     if el is None:
         raise RuntimeError(f"Missing element: #{id_}")
     return el
-
-def _read_matrix():
-    vals = [float(_q(i).value) for i in IDS]
-    return np.array(vals, dtype=float).reshape((3,3))
-
-def _fmt(M, name):
-    with np.printoptions(precision=4, suppress=True):
-        return f"{name} =\n{M}\n"
-
-def _pre(s: str) -> str:
-    return f"<pre style='margin:0'>{s}</pre>"
-
-def invert_matrix(event=None):
-    try:
-        A = _read_matrix()
-        det = float(np.linalg.det(A))
-        if abs(det) < 1e-12:
-            _q("py-matrix-output").innerHTML = _pre("Matrix is singular (det≈0), cannot invert.")
-            return
-        Ainv = np.linalg.inv(A)
-        I = A @ Ainv
-        txt  = _fmt(A, "A")
-        txt += f"det(A) = {det:.6f}\n\n"
-        txt += _fmt(Ainv, "A⁻¹")
-        txt += _fmt(I, "A·A⁻¹")
-        _q("py-matrix-output").innerHTML = _pre(txt)
-    except Exception as e:
-        _q("py-matrix-output").innerHTML = _pre(f"Error: {e}")
-
-def reset_matrix(event=None):
-    for val, i in zip(DEFAULTS, IDS):
-        _q(i).value = val
-    invert_matrix()
 
 def render_matplotlib_plot():
     x = np.linspace(0, 2*np.pi, 400)
@@ -243,7 +175,6 @@ def render_matplotlib_plot():
 
 def init_page():
     _q("py-meta").innerHTML = f"Python initialized at: <code>{datetime.datetime.now():%Y-%m-%d %H:%M:%S}</code>"
-    reset_matrix()
     render_matplotlib_plot()
 
 # Run once elements exist (this block is after them in HTML)
