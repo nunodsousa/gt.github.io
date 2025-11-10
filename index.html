@@ -19,12 +19,8 @@
 
   <py-script output="python-output">
     import datetime
-    
-    # Get the current time
     now = datetime.datetime.now()
     pretty_time = now.strftime("%Y-%m-%d %H:%M:%S")
-
-    # This print() output goes to the 'python-output' div
     print(f"This line was written by Python at: {pretty_time}")
   </py-script>
 
@@ -33,9 +29,12 @@
   <h2>Python-Generated Plot</h2>
   <div id="plot-output"></div>
 
-  <py-script output="plot-output">
+  <py-script>
     import matplotlib.pyplot as plt
     import numpy as np
+    
+    # NEW: Explicitly import the display function
+    from pyscript import display
 
     # Generate sample data
     x = np.linspace(0, 2 * np.pi, 200)
@@ -49,10 +48,8 @@
     ax.set_ylabel("Y-axis")
     ax.grid(True)
 
-    # The 'fig' object is the last expression,
-    # so PyScript automatically renders it
-    # in the element specified by the 'output' attribute.
-    fig
+    # NEW: Explicitly display the 'fig' in the 'plot-output' div
+    display(fig, target="plot-output")
   </py-script>
 
 </body>
