@@ -11,31 +11,28 @@
     packages = ["matplotlib", "numpy"]
   </py-config>
 </head>
+
 <body>
   <h1>Running Python in the Browser!</h1>
   <p>This text is static HTML.</p>
   
   <div id="python-output"></div>
-
-  <py-script output="python-output">
-    import datetime
-    now = datetime.datetime.now()
-    pretty_time = now.strftime("%Y-%m-%d %H:%M:%S")
-    print(f"This line was written by Python at: {pretty_time}")
-  </py-script>
-
   <hr>
-
   <h2>Python-Generated Plot</h2>
   <div id="plot-output"></div>
 
   <py-script>
+    import datetime
     import matplotlib.pyplot as plt
     import numpy as np
-    
-    # NEW: Explicitly import the display function
     from pyscript import display
 
+    # --- Script 1: Display Time ---
+    now = datetime.datetime.now()
+    pretty_time = now.strftime("%Y-%m-%d %H:%M:%S")
+    display(f"This line was written by Python at: {pretty_time}", target="python-output")
+
+    # --- Script 2: Display Plot ---
     # Generate sample data
     x = np.linspace(0, 2 * np.pi, 200)
     y = np.sin(x)
@@ -48,7 +45,7 @@
     ax.set_ylabel("Y-axis")
     ax.grid(True)
 
-    # NEW: Explicitly display the 'fig' in the 'plot-output' div
+    # Explicitly display the figure in its target div
     display(fig, target="plot-output")
   </py-script>
 
